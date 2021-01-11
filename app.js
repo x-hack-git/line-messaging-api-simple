@@ -73,7 +73,7 @@ app.post("/callback", function (req, res) {
         replyMessages.push(messageTemplate.textMessage(message));
 
         sendMessage.send(req, replyMessages);
-        return;
+        callback(null, 'done');
       },
     ],
     function (error) {
