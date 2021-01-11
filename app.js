@@ -53,10 +53,9 @@ app.post("/callback", function (req, res) {
           proxy: process.env.FIXIE_URL,
           json: true,
           headers: {
-            Authorization: "Bearer {" + process.env.LINE_CHANNEL_ACCESS_TOKEN + "}",
+            Authorization: `Bearer {${process.env.LINE_CHANNEL_ACCESS_TOKEN}}`,
           }
         })
-        console.log(userProfile)
 
         // 次のメソッドを実行
         callback(req, userProfile, eventData);
@@ -67,7 +66,7 @@ app.post("/callback", function (req, res) {
         // var message_type = eventData["message"]["type"];
         // var message_text = eventData["message"]["text"];
   
-        var message = "hello, " + userProfile.displayName + "さん"; // 「hello, 〇〇さん」と返事する
+        var message = "hello, 松田さん"; // 「hello, 〇〇さん」と返事する
         replyMessages.push(messageTemplate.textMessage(message));
     
         sendMessage.send(req, replyMessages);
