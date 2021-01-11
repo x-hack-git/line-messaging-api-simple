@@ -38,10 +38,19 @@ app.post("/callback", function (req, res) {
         }
 
         // テキストか画像が送られてきた場合のみ返事をする
-        if (!isValidDataType(req)) {
-          return;
+        var eventType = req.body["events"][0];
+        var messageType = eventType["message"]["type"];
+
+        if (eventType["type"] != "message") {
+          return; // メッセージではない
+        }
+        if (messageType != "text" && messageType != "image") {
+          return; // テキストでも画像でもない
         }
 
+        callback(null, req);
+      },
+      function (req, callback) {
         // LINE Platformから送られてきたデータからユーザIDを取得する
         var eventData = req.body["events"][0];
         var user_id = eventData["source"]["userId"];
@@ -50,7 +59,8 @@ app.post("/callback", function (req, res) {
         if (eventData["source"]["type"] !== "user") return;
 
         // ユーザー情報取得
-        axios.get("https://api.line.me/v2/bot/profile/" + user_id, {
+        axios
+          .get("https://api.line.me/v2/bot/profile/" + user_id, {
             proxy: process.env.FIXIE_URL,
             json: true,
             headers: {
@@ -59,7 +69,7 @@ app.post("/callback", function (req, res) {
           })
           .then((res) => {
             // 次のメソッドを実行
-            console.log(res)
+            console.log(res);
             callback(null, res.data, eventData);
           });
       },
@@ -73,7 +83,7 @@ app.post("/callback", function (req, res) {
         replyMessages.push(messageTemplate.textMessage(message));
 
         sendMessage.send(req, replyMessages);
-        callback(null, 'done');
+        callback(null, "done");
       },
     ],
     function (error) {
@@ -86,39 +96,9 @@ app.listen(app.get("port"), function () {
   console.log("Node app is running");
 });
 
-// 送られてきたメッセージタイプをbotの内容に合わせる
-// 一致すればtrueを返す
-function isValidDataType(req) {
-  var eventType = req.body["events"][0];
-  var messageType = eventType["message"]["type"];
-
-  if (eventType["type"] != "message") {
-    return false; // メッセージではない
-  }
-  if (messageType != "text" && messageType != "image") {
-    return false; // テキストでも画像でもない
-  }
-  return true; // valid
-}
-
-// function getProfileOption(user_id) {
-//   return {
-//     url: "https://api.line.me/v2/bot/profile/" + user_id,
-//     proxy: process.env.FIXIE_URL,
-//     json: true,
-//     headers: {
-//       Authorization: "Bearer {" + process.env.LINE_CHANNEL_ACCESS_TOKEN + "}",
-//     },
-//   };
-// }
-
 // 署名検証
 function validate_signature(signature, body) {
   return (
-    signature ==
-    crypto
-      .createHmac("sha256", process.env.LINE_CHANNEL_SECRET)
-      .update(new Buffer(JSON.stringify(body), "utf8"))
-      .digest("base64")
+    signature == crypto.createHmac("sha256", process.env.LINE_CHANNEL_SECRET).update(new Buffer(JSON.stringify(body), "utf8")).digest("base64")
   );
 }
