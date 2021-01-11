@@ -77,10 +77,18 @@ app.post("/callback", function (req, res) {
         const replyMessages = [];
         // var message_id = eventData["message"]["id"];
         // var message_type = eventData["message"]["type"];
-        // var message_text = eventData["message"]["text"];
+        var message_text = eventData["message"]["text"];
 
         var message = `hello, ${userProfile.displayName}さん`; // 「hello, 〇〇さん」と返事する
         replyMessages.push(messageTemplate.textMessage(message));
+        
+        if (message_text == "猫") {
+          replyMessages.push(messageTemplate.imageMessage("https://i.imgur.com/8cbL5dl.jpg"));
+        } else if (message_text == "犬") {
+          replyMessages.push(messageTemplate.imageMessage("https://i.imgur.com/ph82KWH.jpg"));
+        } else if (message_text == "鹿") {
+          replyMessages.push(messageTemplate.imageMessage("https://i.imgur.com/Z6ilhSI.jpg"));
+        }
 
         sendMessage.send(req, replyMessages);
         callback(null, "done");
