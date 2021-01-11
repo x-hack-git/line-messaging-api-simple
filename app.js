@@ -60,16 +60,16 @@ app.post("/callback", function (req, res) {
           .then((res) => {
             // 次のメソッドを実行
             console.log(res)
-            callback(req, res, eventData);
+            callback(null, res.data, eventData);
           });
       },
-      function (req, userProfile, eventData) {
+      function (userProfile, eventData, callback) {
         const replyMessages = [];
         // var message_id = eventData["message"]["id"];
         // var message_type = eventData["message"]["type"];
         // var message_text = eventData["message"]["text"];
 
-        var message = "hello, 松田さん"; // 「hello, 〇〇さん」と返事する
+        var message = `hello, ${userProfile.displayName}さん`; // 「hello, 〇〇さん」と返事する
         replyMessages.push(messageTemplate.textMessage(message));
 
         sendMessage.send(req, replyMessages);
