@@ -8,10 +8,6 @@ var axios = require("axios");
 var sendMessage = require("./lib/sendMessage.js");
 var messageTemplate = require("./lib/messageTemplate.js");
 
-// utilモジュールを使います。
-var util = require("util");
-const { cpuUsage } = require("process");
-
 app.set("port", process.env.PORT || 8000);
 // JSONの送信を許可
 app.use(
@@ -34,20 +30,15 @@ app.post("/callback", function (req, res) {
       // エラーチェック
       function (callback) {
         // リクエストがLINE Platformから送られてきたか確認する
-        if (!validate_signature(req.headers["x-line-signature"], req.body)) {
-          return;
-        }
+        if (!validate_signature(req.headers["x-line-signature"], req.body)) return; // 署名が正しくない
+
+        // メッセージ送信のイベント時のみ実行する
+        var eventType = req.body["events"][0];
+        if (eventType["type"] != "message") return; // メッセージではない
 
         // テキストか画像が送られてきた場合のみ返事をする
-        var eventType = req.body["events"][0];
         var messageType = eventType["message"]["type"];
-
-        if (eventType["type"] != "message") {
-          return; // メッセージではない
-        }
-        if (messageType != "text" && messageType != "image") {
-          return; // テキストでも画像でもない
-        }
+        if (messageType != "text" && messageType != "image") return; // テキストでも画像でもない
 
         callback(null, req);
       },
@@ -72,7 +63,7 @@ app.post("/callback", function (req, res) {
             callback(null, res.data, eventData);
           });
       },
-      // 
+      // 返信のメッセージを組み立てる
       function (userProfile, eventData, callback) {
         const replyMessages = [];
         const message_id = eventData["message"]["id"];
@@ -82,13 +73,13 @@ app.post("/callback", function (req, res) {
         const message = `hello, ${userProfile.displayName}さん`; // 「hello, 〇〇さん」と返事する
         replyMessages.push(messageTemplate.textMessage(message));
         
-        // if (message_text == "猫") {
-        //   replyMessages.push(messageTemplate.imageMessage("https://i.imgur.com/8cbL5dl.jpg"));
-        // } else if (message_text == "犬") {
-        //   replyMessages.push(messageTemplate.imageMessage("https://i.imgur.com/ph82KWH.jpg"));
-        // } else if (message_text == "鹿") {
-        //   replyMessages.push(messageTemplate.imageMessage("https://i.imgur.com/Z6ilhSI.jpg"));
-        // }
+        if (message_text == "猫") {
+          replyMessages.push(messageTemplate.imageMessage("https://i.imgur.com/8cbL5dl.jpg"));
+        } else if (message_text == "犬") {
+          replyMessages.push(messageTemplate.imageMessage("https://i.imgur.com/ph82KWH.jpg"));
+        } else if (message_text == "鹿" || message_text == "しか" ) {
+          replyMessages.push(messageTemplate.imageMessage("https://img.freepik.com/free-photo/red-deer-cervus-elaphus-stag-standing-calmly-on-meadow_158217-8.jpg"));
+        }
 
         sendMessage.send(req, replyMessages);
         callback(null, "done");
