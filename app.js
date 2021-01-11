@@ -10,6 +10,7 @@ var messageTemplate = require("./lib/messageTemplate.js");
 
 // utilモジュールを使います。
 var util = require("util");
+const { cpuUsage } = require("process");
 
 app.set("port", process.env.PORT || 8000);
 // JSONの送信を許可
@@ -49,32 +50,34 @@ app.post("/callback", function (req, res) {
         if (eventData["source"]["type"] !== "user") return;
 
         // ユーザー情報取得
-        const userProfile = await axios.get('https://api.line.me/v2/bot/profile/' + user_id, {
-          proxy: process.env.FIXIE_URL,
-          json: true,
-          headers: {
-            Authorization: `Bearer {${process.env.LINE_CHANNEL_ACCESS_TOKEN}}`,
-          }
-        })
-
-        // 次のメソッドを実行
-        callback(req, userProfile, eventData);
+        axios.get("https://api.line.me/v2/bot/profile/" + user_id, {
+            proxy: process.env.FIXIE_URL,
+            json: true,
+            headers: {
+              Authorization: `Bearer {${process.env.LINE_CHANNEL_ACCESS_TOKEN}}`,
+            },
+          })
+          .then((res) => {
+            // 次のメソッドを実行
+            console.log(res)
+            callback(req, res, eventData);
+          });
       },
       function (req, userProfile, eventData) {
         const replyMessages = [];
         // var message_id = eventData["message"]["id"];
         // var message_type = eventData["message"]["type"];
         // var message_text = eventData["message"]["text"];
-  
+
         var message = "hello, 松田さん"; // 「hello, 〇〇さん」と返事する
         replyMessages.push(messageTemplate.textMessage(message));
-    
+
         sendMessage.send(req, replyMessages);
         return;
-      }
+      },
     ],
     function (error) {
-      console.log('all done.');
+      console.log("all done.");
     }
   );
 });
