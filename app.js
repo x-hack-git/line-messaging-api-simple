@@ -1,9 +1,9 @@
 var express = require("express");
 var app = express();
 var bodyParser = require("body-parser");
-var request = require("request");
 var crypto = require("crypto");
 var async = require("async");
+var axios = require("axios");
 
 var sendMessage = require("./lib/sendMessage.js");
 var messageTemplate = require("./lib/messageTemplate.js");
@@ -44,55 +44,38 @@ app.post("/callback", function (req, res) {
         // LINE Platformから送られてきたデータからユーザIDを取得する
         var eventData = req.body["events"][0];
         var user_id = eventData["source"]["userId"];
-        var message_id = eventData["message"]["id"];
-        // 'text', 'image' ...
-        var message_type = eventData["message"]["type"];
-        var message_text = eventData["message"]["text"];
 
         // ユーザー以外から届いたデータは無視する
         if (eventData["source"]["type"] !== "user") return;
 
         // ユーザー情報取得
-        request.get(
-          getProfileOption(user_id),
-          function (error, response, body) {
-            if (!error && response.statusCode == 200) {
-              // 次のメソッドを呼ぶ
-              callback(
-                req,
-                body["displayName"],
-                message_id,
-                message_type,
-                message_text
-              );
-            }
+        const userProfile = await axios.get('https://api.line.me/v2/bot/profile/' + user_id, {
+          proxy: process.env.FIXIE_URL,
+          json: true,
+          headers: {
+            Authorization: "Bearer {" + process.env.LINE_CHANNEL_ACCESS_TOKEN + "}",
           }
-        );
+        })
+        console.log(userProfile)
+
+        // 次のメソッドを実行
+        callback(req, userProfile, eventData);
       },
-    ],
-
-    function (req, displayName, message_id, message_type, message_text) {
-      const replyMessages = [];
-      var message = "hello, " + displayName + "さん"; // helloと返事する
-
-      // var message = message_text; // おうむ返しする
-      // var message = message_text + "[" + message_text.length + "文字]";
-      // replyMessages.push(messageTemplate.textMessage(message));
-
-      ///////////////////
-      // 画像で返事をする //
-      ///////////////////
-
-      if (message_text == "猫") {
-        replyMessages.push(messageTemplate.imageMessage("https://i.imgur.com/8cbL5dl.jpg"));
-      } else if (message_text == "犬") {
-        replyMessages.push(messageTemplate.imageMessage("https://i.imgur.com/ph82KWH.jpg"));
-      } else if (message_text == "鹿") {
-        replyMessages.push(messageTemplate.imageMessage("https://i.imgur.com/Z6ilhSI.jpg"));
+      function (req, userProfile, eventData) {
+        const replyMessages = [];
+        // var message_id = eventData["message"]["id"];
+        // var message_type = eventData["message"]["type"];
+        // var message_text = eventData["message"]["text"];
+  
+        var message = "hello, " + userProfile.displayName + "さん"; // 「hello, 〇〇さん」と返事する
+        replyMessages.push(messageTemplate.textMessage(message));
+    
+        sendMessage.send(req, replyMessages);
+        return;
       }
-
-      sendMessage.send(req, replyMessages);
-      return;
+    ],
+    function (error) {
+      console.log('all done.');
     }
   );
 });
@@ -116,16 +99,16 @@ function isValidDataType(req) {
   return true; // valid
 }
 
-function getProfileOption(user_id) {
-  return {
-    url: "https://api.line.me/v2/bot/profile/" + user_id,
-    proxy: process.env.FIXIE_URL,
-    json: true,
-    headers: {
-      Authorization: "Bearer {" + process.env.LINE_CHANNEL_ACCESS_TOKEN + "}",
-    },
-  };
-}
+// function getProfileOption(user_id) {
+//   return {
+//     url: "https://api.line.me/v2/bot/profile/" + user_id,
+//     proxy: process.env.FIXIE_URL,
+//     json: true,
+//     headers: {
+//       Authorization: "Bearer {" + process.env.LINE_CHANNEL_ACCESS_TOKEN + "}",
+//     },
+//   };
+// }
 
 // 署名検証
 function validate_signature(signature, body) {
