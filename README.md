@@ -38,18 +38,12 @@ https://youtu.be/aByTfznhBWs
 
 下記のソフトウェアとアカウントが必要なので、事前に取得しておいてください  
 
-- Googleアカウント
-
-  アカウントがあると各種ログインが簡単になります  
-  https://accounts.google.com/
-
-- Chromeブラウザ
-  ブラウザはChromeを利用してください  
+- Chromeブラウザ/FireFoxブラウザ
+  ブラウザはChromeかFireFoxのどちらかをご利用ください  
   https://www.google.com/intl/ja_ALL/chrome/
 
-- codenvyアカウント
-  cloud IDEです  
-  https://codenvy.io/site/login
+- AWSアカウント
+  cloud9を利用します。
 
 - Herokuアカウント
   サーバーはherokuを利用します  
@@ -96,35 +90,6 @@ https://developers.line.biz/ja/
   ```
   - 貼り付けたら「Create」を実行します
 
-#### STEP-4 ターミナルでの作業
-
-  1. ターミナルで下記のコマンドを実行
-  ```
-  $ curl https://cli-assets.heroku.com/install.sh | sh
-  $ cd line-messaging-api  
-  ```
-
-  2. emailアドレスとpasswordでherokuサービスにログインします
-  ```
-  $ heroku login --interactive
-  # 出力結果
-  # heroku: Enter your login credentials
-  # Email: example@gmail.com
-  # Password: *************
-  # Logged in as matsusin0413@gmail.com
-  ```
-
-  3. heorkuにアプリを追加
-  ```
-  $ heroku create your-app-name
-  $ git push heroku master
-  ```
-
-  4. 修正したら変更をHerokuに反映させる必要があるので、下記のコマンドを実行します
-  ```
-  $ sh git.sh
-  ```
-
 ## Herokuでの作業
 
 - herokuダッシュボードでConfigをセットする
@@ -133,19 +98,3 @@ https://developers.line.biz/ja/
   2. LINE_CHANNEL_ACCESS_TOKENのセット
 
 ---
-
-# 補足
-
-### 天気APIを使う場合
-1. こちらでアカウント作成 → https://openweathermap.org/api
-2. API Keyを取得する
-3. herokuサーバーにAPI Keyを登録
-```
-$ heroku config:set WEATHER_API_KEY=""
-```
-
-### ぐるなびAPI
-https://api.gnavi.co.jp/api/tools/?apitype=RestSearchAPI
-
-### アンケート
-https://docs.google.com/forms/d/13tuqpEKT9VVqTSwZB5ml_kAYfDo0UH63VWIT9eBbob0
